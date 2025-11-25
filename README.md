@@ -1,1 +1,3 @@
 # MultiGeoGuessr
+
+マルチプレイができます。
