@@ -85,7 +85,7 @@ body,
 }
 
 .right {
-  width: 300px;
+  width: 100px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -126,11 +126,11 @@ body,
 
 .mask-topleft {
   position: absolute;
-  left: 12px;
-  top: 12px;
-  width: 140px;
-  height: 40px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.6));
+  left: 0px;
+  top: 0px;
+  width: 200px;
+  height: 80px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 1.0), rgba(255, 255, 255, 1.0));
   border-radius: 8px;
   pointer-events: none
 }
@@ -166,7 +166,7 @@ body,
 }
 
 .small-map.reveal {
-  width: 420px;
+  width: 800px;
   height: 300px
 }
 
@@ -226,7 +226,7 @@ body,
 
 /* big result numbers */
 .result-panel .result-number .num {
-  font-size: 44px;
+  font-size: 30px;
   color: #111;
   font-weight: 900
 }
@@ -327,8 +327,8 @@ body,
 }
 
 .player-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%
 }
 
@@ -380,7 +380,7 @@ body.round-active .left .card {
 }
 
 body.round-active .right {
-  width: 200px;
+  width: 10px;
   font-size: 12px;
 }
 
