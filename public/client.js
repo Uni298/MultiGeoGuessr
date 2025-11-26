@@ -55,6 +55,15 @@ function calculateScore(distanceKm) {
 // DOM helpers
 const $ = id => document.getElementById(id);
 
+function getRandomColor() {
+  const colors = [
+    '#e63946', '#f1c40f', '#2ecc71', '#3498db',
+    '#9b59b6', '#e67e22', '#1abc9c', '#ff6f61',
+    '#16a085', '#d35400', '#8e44ad', '#2c3e50'
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
 function setRoomInfo() {
   $('room-id').textContent = roomId ? `Room: ${roomId}` : 'Room: -';
   $('role').textContent = isHost ? 'Role: Host' : (roomId ? 'Role: Player' : 'Role: -');
@@ -117,7 +126,13 @@ $('btn-create').addEventListener('click', async () => {
   settings.timeLimit = parseInt($('time-limit').value || '-1', 10);
   settings.guessCountdown = parseInt($('guess-countdown').value || '-1', 10);
   socket.emit('create_room', { name, settings }, (res) => {
-    if (res.ok) { roomId = res.roomId; isHost = true; myId = socket.id; setRoomInfo(); $('room-input').value = roomId; }
+    if (res.ok) {
+      roomId = res.roomId;
+      isHost = true;
+      myId = socket.id;
+      setRoomInfo();
+      $('room-input').value = roomId;
+    }
   });
 });
 
@@ -126,8 +141,11 @@ $('btn-join').addEventListener('click', () => {
   const rid = $('room-input').value.trim();
   if (!rid) { alert('Room ID を入力してください'); return; }
   socket.emit('join_room', { roomId: rid, name }, (res) => {
-    if (res.ok) { roomId = rid; isHost = false; setRoomInfo(); }
-    else alert(res.msg || '参加できません');
+    if (res.ok) {
+      roomId = rid;
+      isHost = false;
+      setRoomInfo();
+    } else alert(res.msg || '参加できません');
   });
 });
 
@@ -171,29 +189,55 @@ if (hostNextBtn) { hostNextBtn.addEventListener('click', () => { socket.emit('ne
 socket.on('connect', () => { myId = socket.id; });
 
 socket.on('room_update', (data) => {
-  // update lobby UI
-  const container = $('lobby-players'); container.innerHTML = '';
+  const container = $('lobby-players');
+  container.innerHTML = '';
   data.players.forEach(p => {
     playersState[p.id] = p;
-    const div = document.createElement('div'); div.className = 'player-row card';
-    const chk = document.createElement('input'); chk.type = 'checkbox'; chk.dataset.id = p.id;
-    const dot = document.createElement('div'); dot.className = 'player-dot'; dot.style.background = p.color || (p.id === socket.id ? '#111' : '#888');
-    const name = document.createElement('div'); name.className = 'player-name'; name.textContent = p.name + (p.id === data.hostId ? ' (Host)' : '');
-    const status = document.createElement('div'); status.className = 'status'; status.textContent = guessedMap[p.id] ? 'guessed' : '';
+
+    const div = document.createElement('div');
+    div.className = 'player-row card';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.dataset.id = p.id;
+
+    const dot = document.createElement('div');
+    dot.className = 'player-dot';
+    // サーバーから送られてきた色をそのまま使う
+    dot.style.background = p.color || (p.id === socket.id ? '#111' : '#888');
+
+    const name = document.createElement('div');
+    name.className = 'player-name';
+    name.textContent = p.name + (p.id === data.hostId ? ' (Host)' : '');
+
+    const status = document.createElement('div');
+    status.className = 'status';
+    status.textContent = guessedMap[p.id] ? 'guessed' : '';
     if (guessedMap[p.id]) div.classList.add('guessed');
-    // attempts badge
-    const attempts = document.createElement('div'); attempts.className = 'attempt-badge'; attempts.textContent = `残り:${Math.max(0, MAX_OVERWRITES - (p.submitCount || 0))}`;
-    div.appendChild(chk); div.appendChild(dot); div.appendChild(name); div.appendChild(status); div.appendChild(attempts);
+
+    const attempts = document.createElement('div');
+    attempts.className = 'attempt-badge';
+    attempts.textContent = `残り:${Math.max(0, MAX_OVERWRITES - (p.submitCount || 0))}`;
+
+    div.appendChild(chk);
+    div.appendChild(dot);
+    div.appendChild(name);
+    div.appendChild(status);
+    div.appendChild(attempts);
     container.appendChild(div);
   });
-  // update my attempts display
+
   const me = data.players.find(p => p.id === socket.id);
-  if (me) { const a = document.getElementById('attempts-left'); if (a) a.textContent = Math.max(0, MAX_OVERWRITES - (me.submitCount || 0)); }
-  // show host-only parts if I'm host
+  if (me) {
+    const a = document.getElementById('attempts-left');
+    if (a) a.textContent = Math.max(0, MAX_OVERWRITES - (me.submitCount || 0));
+  }
+
   isHost = (socket.id === data.hostId);
-  if (isHost) document.querySelectorAll('.host-only').forEach(el => el.style.display = 'block'); else document.querySelectorAll('.host-only').forEach(el => el.style.display = 'none');
+  if (isHost) document.querySelectorAll('.host-only').forEach(el => el.style.display = 'block');
+  else document.querySelectorAll('.host-only').forEach(el => el.style.display = 'none');
   setRoomInfo();
 });
+
 
 socket.on('kicked', () => { alert('KICKED'); location.reload(); });
 
