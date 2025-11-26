@@ -20,6 +20,17 @@ function makeRoomId(){
   return (Math.floor(Math.random()*9000)+1000).toString();
 }
 
+const COLORS = [
+  '#ef4444','#f59e0b','#10b981','#3b82f6',
+  '#8b5cf6','#ec4899','#06b6d4','#f97316',
+  '#0ea5a4','#7c3aed','#ff6f61','#16a085',
+  '#d35400','#8e44ad','#2c3e50'
+];
+
+function assignColor() {
+  return COLORS[Math.floor(Math.random() * COLORS.length)];
+}
+
 function broadcastRoomUpdate(roomId){
   const room = rooms[roomId];
   if(!room) return;
@@ -31,38 +42,57 @@ io.on('connection', (socket) => {
   console.log('conn', socket.id);
 
   socket.on('create_room', ({name, settings}, cb) => {
-    const roomId = makeRoomId();
-    const room = {
-      id: roomId,
-      hostId: socket.id,
-      settings: Object.assign({timeLimit:-1, guessCountdown:-1}, settings || {}),
-      players: {},
-      spawnIndex: 0,
-      status: 'waiting',
-      timer: null,
-      guessTimer: null
-    };
-    rooms[roomId] = room;
+  const roomId = makeRoomId();
+  const room = {
+    id: roomId,
+    hostId: socket.id,
+    settings: Object.assign({timeLimit:-1, guessCountdown:-1}, settings || {}),
+    players: {},
+    spawnIndex: 0,
+    status: 'waiting',
+    timer: null,
+    guessTimer: null
+  };
+  rooms[roomId] = room;
 
-    socket.join(roomId);
-    room.players[socket.id] = {id: socket.id, name: name || 'Host', color: '#1f2937', score: 0, lastGuess: null, connected:true, submitCount:0, excluded:false};
+  socket.join(roomId);
+  room.players[socket.id] = {
+    id: socket.id,
+    name: name || 'Host',
+    color: assignColor(),   // ←ここをランダムに
+    score: 0,
+    lastGuess: null,
+    connected: true,
+    submitCount: 0,
+    excluded: false
+  };
 
-    console.log('room created', roomId);
-    broadcastRoomUpdate(roomId);
-    cb({ok:true, roomId});
-  });
+  console.log('room created', roomId);
+  broadcastRoomUpdate(roomId);
+  cb({ok:true, roomId});
+});
+
 
   socket.on('join_room', ({roomId, name}, cb) => {
-    const room = rooms[roomId];
-    if(!room) return cb({ok:false, msg:'ルームが存在しません'});
-    socket.join(roomId);
-    // assign color
-    const colors = ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#f97316','#0ea5a4','#7c3aed'];
-    const idx = Object.keys(room.players).length % colors.length;
-    room.players[socket.id] = {id: socket.id, name: name || 'Player', color: colors[idx], score: 0, lastGuess: null, connected:true, submitCount:0, excluded:false};
-    broadcastRoomUpdate(roomId);
-    cb({ok:true});
-  });
+  const room = rooms[roomId];
+  if(!room) return cb({ok:false, msg:'ルームが存在しません'});
+  socket.join(roomId);
+
+  room.players[socket.id] = {
+    id: socket.id,
+    name: name || 'Player',
+    color: assignColor(),   // ←ここをランダムに
+    score: 0,
+    lastGuess: null,
+    connected: true,
+    submitCount: 0,
+    excluded: false
+  };
+
+  broadcastRoomUpdate(roomId);
+  cb({ok:true});
+});
+
 
   socket.on('leave_room', ({roomId}) => {
     const room = rooms[roomId];
